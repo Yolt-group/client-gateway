@@ -1,0 +1,11 @@
+environment: yfb-prd
+yolt:
+  deployment:
+    environment: yfb-prd
+  hateos:
+    rootlinks: true
+# yamllint disable rule:line-length
+service:
+  tokens:
+    signature-jwks: '{"keys":[{"use":"sig","kty":"RSA","kid":"a287628f-9dc4-49a2-b29b-93efea0feee8","alg":"RS512","n":"spYwCA2B4k7EJYqj6MQQCyDvfkl5t50Rb-7THXFbPIh37rraEYs98osvlyw1j9BVOkDGcFycMVPn_ppW_CpTAOIg1vrJkpcGFLhA5KVxDx5rzyu8AddyECCMJQT3LMxTIBiCGiDtvf5EsxoRIQiUgf7EaXm8Ur8gGLgb6J_4A7hkeng0Vr3VWz3c4nLKfdRR9Ot1wtjD5EEQAJX4BHsEaHh9IPOM45TQlkn577HCUATGCmY5ExxT7RzBLLXdz6nepsHMzdiEUVF9TmF-7sqcbMGk9F_nCJDgoLHwa3TR_jY_tNole6vZCFlewUmoxi1Rl_L-rwJjInQVR_JANUpjZQ","e":"AQAB"}]}'
+# yamllint enable rule:line-length

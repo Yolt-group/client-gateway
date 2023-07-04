@@ -1,0 +1,68 @@
+server:
+  port: 8090
+  compression:
+    enabled: false
+logging:
+  level:
+    ROOT: INFO
+zuul:
+  routes:
+    tokens:
+      path: /tokens/**
+      url: http://localhost:8093/tokens
+      subPaths:
+        - subPath: /tokens
+          openHttpMethods: POST
+        - subPath: /test
+          authenticatedHttpMethods: POST
+        - subPath: /test2/**
+          authenticatedHttpMethods: POST
+    client-users:
+      path: /client-users/**
+      url: http://localhost:8093/client-users
+    site-management:
+      path: /site-management/**
+      url: http://localhost:8093/site-management
+      subPaths:
+        - subPath: /user-sites/**
+          openHttpMethods: GET, POST, PUT, DELETE
+        - subPath: /sites/**
+          openHttpMethods: GET
+#  TODO: Back Compatibility hosts. Remove when not needed
+    tokens-compatibility:
+      path: /client-proxy/tokens/**
+      url: http://localhost:8093/tokens
+      subPaths:
+        - subPath: /tokens
+          openHttpMethods: POST
+        - subPath: /test
+          authenticatedHttpMethods: POST
+        - subPath: /test2/**
+          authenticatedHttpMethods: POST
+    client-users-compatibility:
+      path: /client-proxy/client-users/**
+      url: http://localhost:8093/client-users
+    site-management-compatibility:
+      path: /client-proxy/site-management/**
+      url: http://localhost:8093/site-management
+      subPaths:
+        - subPath: /user-sites/**
+          openHttpMethods: GET, POST, PUT, DELETE
+        - subPath: /sites/**
+          openHttpMethods: GET
+service:
+  client-users:
+    url: http://localhost:8093/client-users
+  tokens:
+    # taken from k8s-manifest-core to allow running client-gateway against team/integration environments
+    signature-jwks: "{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"2808f03d-1050-45f2-8c01-9c2441e050a8\",\"alg\":\"RS512\",\"n\":\"lRaJ738bbiMUpmTFLVXioZd7u9T9qm6LSH5FdW1AUrJJG-E4fo6n_30_ftUKc4ZZqotlJ-SvujHvqfNTbVkVy4m4j-yVgTQNP-OIsgTREVckcOk0v8bTaQALB3uCLA7xdDrr24K35tS5E6kDQQ8m9RvHiQk4owNLT81PevHkoH1lfgUwOZHfXLzJBqj_PXPoSIT1y9SfkCn7M00ea28n2xWbGXV_vj8bhJhKSXB2jnlHXO2QEXH6v8VoENl9CaWyjkJ0uJPPCyjRYO4-P2F92Xw88RC0rGGH-AA_sI9l8zOHu2MKFAL9txi2irUBq9bIayTWv0sjBbtHm_hopywVaw\"}]}"
+    url: https://ingress.integration.yolt.io/tokens
+  users:
+    url: http://localhost:8093/users
+    path: /users/
+yolt:
+  client-token:
+    requester:
+      signing-keys:
+        # taken from k8s-manifest-core to allow running client-gateway against team/integration environments
+        client-gateway: "{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"2ff31903-eeaf-4fa1-8be0-e0b5b0e7766d\",\"alg\":\"PS512\",\"n\":\"wLMY_9oM4jgB7ytDfPg_oGPoMH_UyqSP-nBeN1KF1fYHRpUxru95eBoErr3Z_AGQuXXlckfQr7UAV-QSBqsuKZen1s8ZEPue3KVla_AR2fklI5dhJOb4N7EndB4I6oy-UX-iUqpfxz8SAMYoWRUW6umWahv70T0mvZ7j8KL1sn-YnCEFFdpJU6hMbJ4BEfXZDPvKybC3uXjvzREN8Ls0LT0TRUyRQSs16pw1ALkHLlmXOpi62-OQsAJIO8ypOrV11q4vMSO4cGPX5doaWSr97eeedZ5VwSCVgdg6988OYddW7umzYAQN7rFQTO6t4N3daYcR7FOAH_c_RzpbUNFY7Q\",\"e\":\"AQAB\",\"d\":\"bFzKtCX0lMoWHF7h5sbbUOCd05gvG32LEbRa5xVa-cUOtlxzwgIc9rL66yEMEjD3J7PqwWctLYHFnac9k85zeSQ1WBDB8dDttvqznA02nLMEdY1NLalM8FSI8T1qmitnYwE5UO9KSQtonlLQobfAWX3d_fGanEGdJYjSeaHKNQOd3NWYYbsvk0qHHAUZAXvWyiqKMydwBkpKuwp6Umu8AzEDdJP6Pv0jjznpBCysjFRqJksdNg40iaNTlCupxk-uZ2LpRu2l3zc-pef2Xf_Y_hSjlW6AkjTlCJt1AkCAxK3w_sNLz9qXdjHqzpWDHWgxih77OD6qWqSM5g1VNfcTgQ\",\"p\":\"1dIS3DxSNwYRCECKMoP7zacUVGeuqRhSqEtzD3imsfitL3z_aHvHCPFNNscxgnd6fvlGIIg-W_aYyVJg5w_mbH6-GUWntmTw9OsaRfsFG5d7it32LmcR9vnXTsFmuF_5q2HzFCS1PLHCChWcQcdt5o-u-iHnvAK91oHscdi1w_0\",\"q\":\"5rZqNDDZkhWd3M6XnP7Vtpxzja7WQmGr-aSB0vqSzcLUY9V5v7xhFnOKM67ecJOwRe3nAfU1BMSVLgEkFi0h8WKZJ5ep4EB0lR32heb9OjH7-qB21bMga8jrq2tQbvpjAA4GLYMk3cOEZB-ebluEAToBZn98GYRihVRwVEfiY7E\",\"dp\":\"Nyd2F_szVeApupAzVa534Gdttgv8oL-WarTznBUKIrQ7sBk1JLVw9NyRh0TAf5_kKCaSsUeTllM4vA2U02VlkazrykcOaN0GzpZqc4y5l5Fum7Z_jx6lIqj1oen_XiXbmBqvAg4p9dsAa2uBn_IaZjO_9eOTDAtE_rUK0Z8N290\",\"dq\":\"KJ8Hlgbf1_PMZrtNQIwx7sQfKFwXR3rQ_9RyM0aBII9kO-uzUwoFAiH3vF_WtHWcfMOFf_e_jQZbyczToL_zkP-uPaVbeKuAm1y6MhtYjK2OUzN7mObAF5o5vGXZtKCLW9AcUFkd3Zn2LnbOu1mLpXekFXruy8NeYWFboctCVhE\",\"qi\":\"C6MSIM5JCB9PdNb3JQwWKazdcu8hgwTas2y1UrWLa_m1nc8SKP0Wb2BEJSEYvbUammkOEZrDajZHaQahGYeGYkKYqC-GQN70otk-l-7RPf9WI1KAqYnkXY1iKhvi1569ITtdE8f7y8bIPwu2mQevSRiJJlcvML1TReTtc3cYICY\"}"

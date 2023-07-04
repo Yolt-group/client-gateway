@@ -1,0 +1,93 @@
+info:
+  appName: client-proxy
+  appVersion: 1
+zuul:
+  host:
+    socket-timeout-millis: 1000
+  routes:
+    accounts-and-transactions-accounts:
+      path: /users/*/accounts
+      url: http://localhost:8092/accounts-and-transactions/users
+      subPaths:
+        - subPath: /*/accounts
+          authenticatedHttpMethods: GET
+    accounts-and-transactions-transactions:
+      path: /users/*/transactions
+      url: http://localhost:8092/accounts-and-transactions/users
+      subPaths:
+        - subPath: /*/transactions
+          authenticatedHttpMethods: GET
+    tokens:
+      path: /tokens/**
+      url: http://localhost:8092/tokens
+    site-management:
+      path: /site-management/**
+      url: http://localhost:8092/site-management
+    health:
+      path: /health/**
+      url: http://localhost:8092/site-management
+    accounts:
+      path: /accounts/**
+      url: http://localhost:8092/accounts-and-transactions/legacy-accounts
+    transactions:
+      path: /transactions/**
+      url: http://localhost:8092/accounts-and-transactions/legacy-transactions
+    documentation:
+      path: /documentation/**
+      url: http://localhost:8092/documentation
+    non-resolveable-host:
+      path: /non-resolveable-host/**
+      url: http://non-resolveable-host-828af0b2-831a-11e7-bb31-be2e44b06b34:8092/non-resolveable-host
+      subPaths:
+        - subPath: /**
+          openHttpMethods: POST, DELETE, GET, PUT
+    v1-users:
+      path: /v1/users/**
+      url: http://localhost:8092/client-users/v1/users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST
+        - subPath: /*
+          authenticatedHttpMethods: DELETE, PUT
+    v2-users:
+      path: /v2/users/**
+      url: http://localhost:8092/client-users/v2/users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST, GET
+        - subPath: /*
+          authenticatedHttpMethods: DELETE, PUT
+service:
+  tokens:
+    signature-jwks: '{"keys":[{"kty":"RSA","kid":"60f7808d-03dd-42a7-8b62-2f91d0b0cb0a","n":"lnI3PMDybQtgSwjSV-PYkkd0GK54aIZ-VRdh-HI-npzRTYE77Es49v0_13-cbGWH7TfFs-HLz7jS-3BGuSTduRKQbvBxk6EWTg6SSJeMc2A_dLSfhGwhZ_NvJSpJ98YcQUtHcZ8K0W-sTyHezyEJ3z1hq8q6P8KATQL9bVy2NMjQ3IEtNRkyV4CncoAeuNGD5Z6xkzhnjnMEqbcoHMb_FMtJ41CFGsEDzPuGYqEz3NvxUZb9_rWZoxKfrcTEOJrwne5nFhdCUcvCe_PID5TrOyyUUXbLRb6jumiVDLN3g8P-WtQaip5UrYUaSUEjjojyMEjQjxSHvo15qkqMxS_yxw","e":"AQAB"}]}'
+    encryption-shared-secret: Fdh9u8rINxfivbrianbbVT1u232VQBZYKx1HGAGPt2IFdh9u8rINxfivbrianbbVT1u232VQBZYKx1HGAGPt2I
+yolt:
+  vault:
+    secret:
+      enabled: true
+      location: classpath:secrets/
+    enabled: false
+    kafka:
+      enabled: false
+  client-token:
+    requester:
+      signing-keys:
+        client-gateway: "{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"9ABA362B-51B8-4CBD-9E96-2934AB0F6458\",\"alg\":\"RS512\",\"n\":\"ty0Sv6Fn-C31Uko2uBTdVPZRcWWYBDhSdcIsx4BqWjimVEFrD8yjU7xslPYTOTDD0SP5Sxiwi-PSPkHINn6NsVIt_E3tXgebI6IZcMUI0P7ENTl5LigQUsjv4Q5hfnpr2n0A2dUpPgkteoQMTmyyDi90iS-y8MwAh2kXP3IYJEmwKYi47x_sv0SthaoTQHkZYQe4CvYQOsdzT4eiPNAE1JWM9Mdog8G10pSoinW5MUcVFOOtqdmx4hIPb-zSMxwmWjn20iePEfamiR8s0Mhzi7T6gN2yVh4ccvxRLBE202IsJWxIrrUh_irrDEMm2lVCkhoumRSvddxnwLGL1Ivh6Q\",\"e\":\"AQAB\",\"d\":\"JJ1R3hQ5YBZvrx8-iNVC2LTT2sLf_Bf2A6von4g_ugEQ3k6lQ-c3zokfezck6I2i1q9GKYip4YyMff1QM_RgBk3S-1foVp9Wl2zTgQMhnAUQ20K9wkgn2yRnLqldO5bk8CuEfAZr1AapnI_AlfyMKuG5faKXNiLRCEAtcXUw9i-duiGiA4Tfshww7nOCywtPP6kcrjKzXRMUOnUMs5xoZ7cF2C63GmQb5xOXAWmpi0EXFrA3Wsex5YHKoYudPxv9Wa1Foerg2IiRY-qLR_XuCsmiIk5VyG7dI9mIs6xoeCJyZXTx7jOixfVQM7wdSr1f8uPv1h_xjM1c45ZQu223sQ\",\"p\":\"6oSjkymGe-EPRKpRIsg1d_6zVAJRamAoCWJFw-Oz456OSO57DZwulQNRWBhfYbpxDUx1kiZEI--SV3H5UUdX4j7JZv7rmUGbvNYstGJcuRBOSM8-Y4YlNCSTWqI3pU4pPq9DKQp34EtggKlX1RbBe_syRft1g9OxG-U2VAhLAXM\",\"q\":\"x_R7ijH2PdgdHjukRNdafSJhmC9tMj99YqCMsRNwyQkDy71bTJQHUa41NA0UzHa012a72DskHpzVO1O8VzRISF-1DOjgcyDrLF3m1s8rR2ehiVxA9RmEBAC8q41Ef9gF_aTq_ffFK-_CjnrBFrD_1FeDkN75dfTkXW0zsCR1CDM\",\"dp\":\"UB_HH0VlvDdVlxk1pVOP6RJtRHuSQ2zc4O_hdB782_zVEhfglPLSe3jpttaE6AfiDjAcTzWhvEFi11uKWfmtDhBzkSvxZKgkxGzMU0jz8wqeJIQiBbDUTy9b5PBdYK4Gq3MH2CLKeChorSyuZJBkxK47K-vQ55xQ-33hhO5caf8\",\"dq\":\"cVk_OvzNiQtcnknS-g9WRX9a8alY7lYdXu6CMtNBaUUJ-NHz0npLl9r4X_RWaP2V0FF1hMMp24yuN75lEs4Zd6WBfbr5mWn8xp7If9bawtSVNsesLwTy2E4OpfUj8pDj_IAjkiqFhD2a_afKk3Fs5NNjSpmLsnlLh0ajOWPBUA8\",\"qi\":\"OGrE0Nw7Tzd0tgek-pkkPZLpiOkbc0Etm2lBtxFwPmkDsiJEFK_SIsO-WaT7N4rRzUsTYMV4-hDFW73TV7oftXWwSJlqAimWwrVD-OPnkzNhF4Ci9s_avfxtmpzxX28xPGInHoilvnv0YfSY7TdTr80B3x_jXO6QskDUdIqLOGc\"}"
+      enabled: true
+      vault-based-secret:
+        enabled: false
+  kafka:
+    topics:
+      client-mtls-certificate:
+        topic-name: clientMtlsCertificate
+        listener-concurrency: 1
+      incoming-request:
+        topic-name: ycs_api_requests
+        listener-concurrency: 1
+  hateos:
+    rootlinks: true
+management:
+  server:
+    port: 8888
+    ssl:
+      enabled: false

@@ -1,0 +1,10 @@
+environment: team6
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+yolt:
+  vault:
+    auth:
+      max-refresh-before-token-expiry-hours: 3

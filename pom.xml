@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>nl.ing.lovebird</groupId>
+        <artifactId>lovebird-commons</artifactId>
+        <version>7.8.5</version>
+        <relativePath/>
+    </parent>
+    <artifactId>client-gateway</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <scm>
+        <connection>scm:git:https://git.yolt.io/backend/client-gateway.git</connection>
+        <developerConnection>scm:git:https://git.yolt.io/backend/client-gateway.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+    <repositories>
+        <repository>
+            <id>lovebird-aws</id>
+            <url>https://nexus.yolt.io/repository/public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>lovebird-aws</id>
+            <url>https://nexus.yolt.io/repository/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <properties>
+        <!-- Build number for versioning -->
+        <!--suppress UnresolvedMavenProperty -->
+        <build.number>${env.CI_PIPELINE_ID}</build.number>
+        <java.version>15</java.version>
+
+        <!-- Version 42.2.20 coming from Spring has vulnerabilities in it. There is no 2.3.xx version out yet with a safe postgresql version, ergo this overwrite. -->
+        <postgresql.version>42.2.25</postgresql.version>
+
+        <!-- Version 5.3.9 coming from Spring Boot Starter has vulnerabilities in it. CVE-2022-22978 CVE-2022-22976 -->
+        <spring-security.version>5.7.1</spring-security.version>
+
+        <!-- Fixes CVE-2022-25857. TODO: remove with next spring boot upgrade -->
+        <snakeyaml.version>1.31</snakeyaml.version>
+    </properties>
+    <modules>
+        <module>client-proxy</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>3.6.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

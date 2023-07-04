@@ -1,0 +1,11 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: client-gateway-pod-disruption-budget
+  labels:
+    name: client-gateway
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      name: client-gateway

@@ -1,0 +1,11 @@
+environment: yfb-sandbox
+yolt:
+  deployment:
+    environment: yfb-sandbox
+  ytsGroup:
+    redirectUrl: https://client-redirect.sandbox.yolt.io
+# yamllint disable rule:line-length
+service:
+  tokens:
+    signature-jwks: '{"keys":[{"use":"sig","kty":"RSA","kid":"c24b39c5-eccb-488a-99e8-ab16a6c56c41","alg":"RS512","n":"wrjO-WQDIcBqXh5CVl4G2-cuabYX4fIpX7WPaWiM5Pm2qqEWQ2yDIYHYdpI8PwVGJBIlPBDaj0-XA454iqIIlPqnPNaUakr8Dp9JgNQMxT0wLBTDGj_QQhnc24XjyjTDngy4FhAh4qr_qqasddXfabCbhMWC3VBbFxe08BAzxf-xjeNtHJvobTjST1txtq3h3vnY-7q0CXYLOmlqPVqKRZDZnCJ1hhWmP43XqGEYoCnKUZXlEZJ8EsorEwtg1cmLjjogweIjaKStDDGXKFR-8gll5BxmvOEXvJJt5qOzbbpk0Qb8WUuV4GSgdl-E2XALDjnkH9TlbWDOUtglLLnDEQ","e":"AQAB"}]}'
+# yamllint enable rule:line-length

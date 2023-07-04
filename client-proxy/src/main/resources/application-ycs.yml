@@ -1,0 +1,17 @@
+namespace: ycs
+yolt:
+  ytsGroup:
+    redirectUrl: https://client-redirect.ycs.${environment}.yolt.io
+  kafka:
+    topics:
+      client-mtls-certificate:
+        topic-name: ycs_clientMtlsCertificate
+        listener-concurrency: 8
+      incoming-request:
+        topic-name: ycs_api_requests
+        listener-concurrency: 8
+# Proxy for AWS environments is Squid. Note that this is overridden in ACC and PRD configurations for now, to point to real ISP proxy.
+isp:
+  proxy:
+    host: squid
+    port: 3128

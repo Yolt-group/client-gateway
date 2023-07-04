@@ -1,0 +1,11 @@
+environment: yfb-ext-prd
+yolt:
+  deployment:
+    environment: yfb-ext-prd
+  ytsGroup:
+    redirectUrl: https://client-redirect.yts.yolt.io
+# yamllint disable rule:line-length
+service:
+  tokens:
+    signature-jwks: '{"keys":[{"use":"sig","kty":"RSA","kid":"97a84836-52de-47f0-9ad9-172a720d3d4e","alg":"RS512","n":"8vrEEmNeXDbVGWZGF8xytWuXUTPtPmg34r2kCPPk-XVXz8HnlJ6JxI2EMg-4Lj_Q94p45b8OAcTrZPEKj_T8FAgO99kK9VmhXXel93mSfZfeRfFRBModiGQVtMIL4D6hEHveQzUab2JJdyLHkPpVqUvtXgpaNWnyXsNJjkE365ixFu4aFqmfOAzUkYLo_8FKHzxkB8AGdVtHRvgnP_IS_d5dc9lInbe656pPW_CueG_c5EviWCXS934Fe_teKeJcJIBUflORg9EPO_vAkfQ0UBsKglNohoRR-wTWtUd1PAMOPfvoGmHWEKxzUjole4zHirvkpYQrio6qhQg8kKB0jw","e":"AQAB"}]}'
+# yamllint enable rule:line-length

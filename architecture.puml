@@ -1,0 +1,39 @@
+@startuml
+actor "ING France Customers" as ingfr_customer
+[ING France App] as ingfr_app
+cloud {
+[ING France] as ingfr
+}
+
+package "Client Gateway" {
+  [Client Proxy] as client_proxy
+  [Client Users] as client_users
+}
+
+[Accounts] as accounts
+[Documentation] as documentation
+[Maintenance] as maintenance
+[Site-Management] as sitemanagement
+[Tokens] as tokens
+[Transactions] as transactions
+[Users] as users
+
+database "client_users" as client_users_keyspace
+client_users -[#red]-> client_users_keyspace
+
+ingfr_customer --> ingfr_app
+ingfr_app -[#black]-> ingfr : HTTP
+ingfr -[#black]-> client_proxy : HTTP
+
+client_proxy -[#black]> client_users : HTTP
+client_proxy -[#black]> users : HTTP
+
+client_users -[#black]-> users : HTTP
+client_users -[#black]-> maintenance : HTTP
+
+client_proxy -[#black]-> accounts : HTTP
+client_proxy -[#black]-> documentation : HTTP
+client_proxy -[#black]-> sitemanagement : HTTP
+client_proxy -[#black]-> tokens : HTTP
+client_proxy -[#black]-> transactions : HTTP
+@enduml

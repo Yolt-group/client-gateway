@@ -1,0 +1,34 @@
+{
+	"_links": {
+		"accounts": {
+			"href": "/accounts/user-accounts/me"
+		},
+		"client-users": {
+			"href": "/client-users/client-users"
+		},
+		"sites": {
+			"href": "/site-management/sites"
+		},
+		"sitesV2": {
+			"href": "/v2/sites"
+		},
+		"sitesByGroup": {
+			"href": "/site-management/sites/by-group"
+		},
+		"tokens": {
+			"href": "/tokens/tokens"
+		},
+		"userSites": {
+			"href": "/site-management/user-sites/me"
+		},
+		"userSitesLogin": {
+			"href": "/site-management/user-sites"
+		},
+		"userSitesRefresh": {
+			"href": "/site-management/user-sites/me/refresh"
+		},
+		"health": {
+			"href": "/health/user-health/me"
+		}
+	}
+}

@@ -1,0 +1,17 @@
+environment: yfb-acc
+lovebird:
+  asyncweb:
+    corePoolSize: 10
+    maxWebThreadPoolSize: 200
+    queue-capacity: 0
+yolt:
+  deployment:
+    environment: yfb-acc
+  vault:
+    auth:
+      max-refresh-before-token-expiry-hours: 3
+# yamllint disable rule:line-length
+service:
+  tokens:
+    signature-jwks: '{"keys":[{"use":"sig","kty":"RSA","kid":"9b967dda-5f08-4f06-9ac4-af6a87640ee5","alg":"RS512","n":"2AViiRXsqOI1NjiDyef5zHkynys0HxsqaiaHLqRJ6eIVhMjFDUCE52IXVqIstLX1T79XJE6UMA9twDPQhhwP5tobKQV9uRpYgXfnfn0SvIE5YTiXpRrVoYlK4f5AJ7DG4WEYMnrRG1ySru-lWqghb-bKeCi07p8XsFaivE4uJPnwyxQ1H6tdZ13etIMdn7kwLqd0_sJTSfUdjFZ1WovzEtFmaHg5YlcwcMn-rp8znif9KQTNkTESlWPi5yfQjQW2RT_2tzkgrhGJg6dD3W8V9g1we3ZK20wugZF0xoZswShBpVLOYn6cLU4yu4ytfgCGP62qkZ61Guz_1C44cJHouw","e":"AQAB"}]}'
+# yamllint enable rule:line-length

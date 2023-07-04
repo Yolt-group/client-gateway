@@ -1,0 +1,442 @@
+server:
+  tomcat:
+    accept-count: 2048
+    max-connections: 1024
+    threads:
+      max: 1024
+  forward-headers-strategy: NATIVE
+  shutdown: graceful
+  max-http-header-size: 40000
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 4096
+logging:
+  level:
+    ROOT: INFO
+    nl.ing.lovebird.clientproxy.filter.filters.pre.AccessTokenValidationFilter: WARN
+spring:
+  application:
+    name: client-gateway
+  main:
+    banner-mode: "off"
+    allow-bean-definition-overriding: true
+  sleuth:
+    sampler:
+      # Disable sampling. Avoids bug wiping keys from MDC when sample is taken
+      probability: 0.0
+      # percentage is there for api-gateway as it uses an old Sleuth version
+      percentage: 0.0
+    # We're overriding this list to ensure sensitive headers such as user-id don't get propagated from outside to inside our cluster.
+    propagation-keys:
+      - request_trace_id
+    baggage-keys:
+      - client-id
+    log:
+      slf4j:
+        whitelisted-mdc-keys:
+          - app_version
+          - cbms-profile-id
+          - client-id
+          - client-user-id
+          - request_trace_id
+          - site_id
+          - user-id
+          - user_site_id
+  task:
+    execution:
+      shutdown:
+        await-termination: true
+        await-termination-period: "PT120S"
+    scheduling:
+      shutdown:
+        await-termination: true
+        await-termination-period: "PT120S"
+  kafka:
+    consumer:
+      group-id: client-proxy
+      enableAutoCommit: true
+      autoCommitInterval: 1000
+      properties:
+        session.timeout.ms: 30000
+        request.timeout.ms: 60000
+        reconnect.backoff.ms: 1000
+        receive.buffer.bytes: 33554432
+        metrics.num.samples: 5
+    producer:
+      group-id: client-proxy
+      acks: all
+      compression-type: lz4
+      properties:
+        # Increased to the default value (from 1s) since we were getting timeout exceptions in producers
+        request.timeout.ms: 30000
+        linger.ms: 1
+        max.request.size: 10000000
+        metrics.num.samples: 5
+info:
+  appName: client-proxy
+  appVersion: 1
+yolt:
+  vault:
+    enabled: true
+    https:
+      enabled: true
+    kafka:
+      enabled: true
+    secrets:
+      tls:
+        cert-filename: client_proxy_cert
+        issuing-ca-filename: client_proxy_issuing_ca
+        private-key-filename: client_proxy_private_key
+    secret:
+      enabled: true
+  commons:
+    error-handling:
+      prefix: CP
+    additional-sensitive-headers:
+      - user-context
+      - x-user-context
+    swagger2:
+      enabled: false
+  client-token:
+    requester:
+      vault-based-secret:
+        enabled: true
+      custom-requesting-service: client-gateway
+  service:
+    user-context:
+      enabled: false
+  server:
+    secure-port: 8443
+    hostname: client-proxy
+  ytsGroup:
+    redirectUrl: https://client-redirect.${environment}.yolt.io
+  sleuth:
+    # We're overriding this list to ensure sensitive headers such as user-id don't get propagated from outside to inside our cluster.
+    # This configuration property yolt.sleuth.propagation-keys is incorrect. Sleuth configuration lives under the spring.sleuth path.
+    propagation-keys:
+      - request_trace_id
+  client-certificates:
+    last-send-timeout: 5m
+  kafka:
+    producer-group: client-proxy
+    producing:
+      enabled: true
+zuul:
+  # This also removes the client-user-id header, but it will be added back in the ClientUserToUserMappingFilter
+  # if the value has actually been found in the database. This way, values that are not checked will not be propagated
+  # towards internal services.
+  ignoredHeaders: client-id,client-token,client-user-id,user-id,x-user-context,cbms-profile-id
+  host:
+    connect-timeout-millis: 1100
+    socket-timeout-millis: 30000
+    max-total-connections: 1024
+    max-per-route-connections: 1024
+  routes:
+    #
+    # Routes for the new versioned /v[0-9]/{entity}/*/~ endpoints where ~ determines to which pod the request should be delivered.
+    #
+    v1-users-accounts: # -> accounts-and-transactions pod
+      path: /v1/users/*/accounts
+      url: https://accounts-and-transactions/accounts-and-transactions/v1/users
+      subPaths:
+        - subPath: /*/accounts
+          authenticatedHttpMethods: GET
+    v1-users-activities: # -> site-management pod
+      path: /v1/users/*/activities
+      url: https://site-management/site-management/v1/users
+      subPaths:
+        - subPath: /*/activities
+          authenticatedHttpMethods: GET
+    v1-users-transactions: # -> accounts-and-transactions pod
+      path: /v1/users/*/transactions
+      url: https://accounts-and-transactions/accounts-and-transactions/v1/users
+      subPaths:
+        - subPath: /*/transactions
+          authenticatedHttpMethods: GET
+    v1-users-transaction-cycles: # -> accounts-and-transactions pod
+      path: /v1/users/*/transaction-cycles
+      url: https://accounts-and-transactions/accounts-and-transactions/v1/users
+      subPaths:
+        - subPath: /*/transaction-cycles
+          authenticatedHttpMethods: GET
+    v1-merchant-suggestions: # -> accounts-and-transactions pod
+      path: /v1/users/*/merchants/*
+      url: https://accounts-and-transactions/accounts-and-transactions/v1/users
+      subPaths:
+        - subPath: /*/merchants/suggestions
+          authenticatedHttpMethods: GET
+    v1-users-enrichments: # -> accounts-and-transactions pod
+      path: /v1/users/*/enrichment-tasks/*
+      url: https://accounts-and-transactions/accounts-and-transactions/v1/users
+      subPaths:
+        - subPath: /*/enrichment-tasks/update-counterparty
+          authenticatedHttpMethods: PATCH
+        - subPath: /*/enrichment-tasks/bulk-update-counterparty
+          authenticatedHttpMethods: POST
+        - subPath: /*/enrichment-tasks/update-category
+          authenticatedHttpMethods: PATCH
+        - subPath: /*/enrichment-tasks/bulk-update-category
+          authenticatedHttpMethods: POST
+        - subPath: /*/enrichment-tasks/similar-transactions
+          authenticatedHttpMethods: GET
+        - subPath: /*/enrichment-tasks/transaction-cycles
+          authenticatedHttpMethods: POST
+
+    v1-users-enrichments-cycles: # -> accounts-and-transactions pod
+      path: /v1/users/*/enrichment-tasks/transaction-cycles/*
+      url: https://accounts-and-transactions/accounts-and-transactions/v1/users
+      subPaths:
+        # transaction-cycles
+        - subPath: /*/enrichment-tasks/transaction-cycles/*
+          authenticatedHttpMethods: PUT, DELETE
+
+    v1-connecting-sites: # -> site-management pod
+      path: /v1/users/*/connect
+      url: https://site-management/site-management/v1/users
+      subPaths:
+        - subPath: /*/connect
+          authenticatedHttpMethods: POST
+    v1-user-sites: # -> site-management pod
+      path: /v1/users/*/user-sites/**
+      url: https://site-management/site-management/v1/users
+      subPaths:
+        - subPath: /*/user-sites/*/refresh
+          authenticatedHttpMethods: PUT
+        - subPath: /*/user-sites/refresh
+          authenticatedHttpMethods: PUT
+        - subPath: /*/user-sites/*/step
+          authenticatedHttpMethods: GET
+        - subPath: /*/user-sites/*/renew-access
+          authenticatedHttpMethods: POST
+        - subPath: /*/user-sites/*
+          authenticatedHttpMethods: GET, DELETE
+        - subPath: /*/user-sites
+          authenticatedHttpMethods: GET, POST
+    v1-payments: # -> pis pod
+      path: /v1/users/*/payments/**
+      url: https://pis/pis/v1/users
+      subPaths:
+        - subPath: /*/payments/single/sepa
+          authenticatedHttpMethods: POST
+        - subPath: /*/payments/submit
+          authenticatedHttpMethods: POST
+        - subPath: /*/payments/*
+          authenticatedHttpMethods: GET
+        - subPath: /*/payments/single/uk
+          authenticatedHttpMethods: POST
+        - subPath: /*/payments
+          authenticatedHttpMethods: GET
+    v1-client-user-kyc: # -> client-users-kyc pod
+      path: /v1/users/*/kyc/**
+      url: https://client-users-kyc/client-users-kyc/v1/users
+      subPaths:
+        - subPath: /*/kyc
+          authenticatedHttpMethods: PATCH
+        - subPath: /*/kyc/file
+          authenticatedHttpMethods: GET
+        - subPath: /*/kyc/file/report
+          authenticatedHttpMethods: GET
+        - subPath: /*/kyc/status
+          authenticatedHttpMethods: GET
+    v1-users: # -> yts-users and client-users-kyc pod (TODO - YCL-1617 cleanup v1 endpoint)
+      path: /v1/users/**
+      url: https://users/users/v1/users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST
+          overrideHttpMethods: POST
+          overrideUrl: https://client-users-kyc/client-users-kyc/v1/users
+        - subPath: /*
+          authenticatedHttpMethods: DELETE, PUT
+          overrideHttpMethods: PUT
+          overrideUrl: https://client-users-kyc/client-users-kyc/v1/users
+    v2-users: # -> yts-users and client-users-kyc pod (TODO - YCL-2530 cleanup v2 endpoint)
+      path: /v2/users/**
+      url: https://users/users/v2/users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST, GET
+          overrideHttpMethods: POST
+          overrideUrl: https://client-users-kyc/client-users-kyc/v2/users
+        - subPath: /*
+          authenticatedHttpMethods: DELETE, PUT
+          overrideHttpMethods: PUT
+          overrideUrl: https://client-users-kyc/client-users-kyc/v2/users
+    v3-users: # -> yts-users and client-users-kyc pod
+      path: /v3/users/**
+      url: https://users/users/v3/users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST, GET
+          overrideHttpMethods: POST
+          overrideUrl: https://client-users-kyc/client-users-kyc/v3/users
+        - subPath: /*
+          authenticatedHttpMethods: DELETE, PUT
+          overrideHttpMethods: PUT
+          overrideUrl: https://client-users-kyc/client-users-kyc/v3/users
+    v4-users: # -> yts-users and client-users-kyc pod
+      path: /v4/users/**
+      url: https://users/users/v4/users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST, GET
+          overrideHttpMethods: POST
+          overrideUrl: https://client-users-kyc/client-users-kyc/v4/users
+        - subPath: /*
+          authenticatedHttpMethods: DELETE, PUT
+          overrideHttpMethods: PUT
+          overrideUrl: https://client-users-kyc/client-users-kyc/v4/users
+        - subPath: /*/promote-one-off-ais
+          authenticatedHttpMethods: POST
+          overrideHttpMethods: POST
+          overrideUrl: https://client-users-kyc/client-users-kyc/v4/users
+    v5-users: # -> yts-users and client-users-kyc pod
+      path: /v5/users/**
+      url: https://users/users/v5/users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST, GET
+          overrideHttpMethods: POST
+          overrideUrl: https://client-users-kyc/client-users-kyc/v5/users
+        - subPath: /*
+          authenticatedHttpMethods: DELETE, PUT
+          overrideHttpMethods: PUT
+          overrideUrl: https://client-users-kyc/client-users-kyc/v5/users
+        - subPath: /*/promote-one-off-ais
+          authenticatedHttpMethods: POST
+          overrideHttpMethods: POST
+          overrideUrl: https://client-users-kyc/client-users-kyc/v5/users
+    v2-entity-user: # TODO - YCL-2530 cleanup v2 endpoint
+      path: /v2/entity-user/**
+      url: https://client-users-kyc/client-users-kyc/v2/entity-user
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST
+    v3-entity-user:
+      path: /v3/entity-user/**
+      url: https://client-users-kyc/client-users-kyc/v3/entity-user
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST
+    v1-tokens: # -> tokens
+      path: /v1/tokens/**
+      url: https://tokens/tokens/v1/tokens
+      subPaths:
+        - subPath: ""
+          openHttpMethods: POST
+    v2-sites: # -> clients pod
+      path: /v2/sites/**
+      url: https://clients/clients/v2/sites
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: GET
+        - subPath: /*
+          authenticatedHttpMethods: GET
+    v1-consent-sessions: # -> consent-starter pod
+      path: /v1/consent-sessions/**
+      url: https://consent-starter/v1/consent-sessions
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: GET, POST
+        - subPath: /*
+          authenticatedHttpMethods: GET
+
+    #
+    # Routes per pod for URLs that always start with the pod name
+    #
+    tokens:
+      path: /tokens/**
+      url: https://tokens/tokens
+      subPaths:
+        - subPath: /tokens
+          openHttpMethods: POST
+    site-management:
+      path: /site-management/**
+      url: https://site-management/site-management
+      subPaths:
+        - subPath: /sites
+          authenticatedHttpMethods: GET
+        - subPath: /v2/sites
+          authenticatedHttpMethods: GET
+          overrideUrl: https://clients/clients
+          overrideHttpMethods: GET
+        - subPath: /v2/sites/*
+          authenticatedHttpMethods: GET
+          overrideUrl: https://clients/clients
+          overrideHttpMethods: GET
+        - subPath: /sites/*
+          authenticatedHttpMethods: GET
+        - subPath: /sites/*/initiate-user-site
+          authenticatedHttpMethods: GET
+        - subPath: /sites/*/initiate-user-site/
+          authenticatedHttpMethods: GET
+        - subPath: /user-sites
+          authenticatedHttpMethods: POST
+        - subPath: /user-sites/*
+          authenticatedHttpMethods: GET, DELETE
+        - subPath: /user-sites/*/refresh
+          authenticatedHttpMethods: PUT
+        - subPath: /user-sites/*/renew-access
+          authenticatedHttpMethods: GET
+        - subPath: /user-sites/*/step
+          authenticatedHttpMethods: GET
+    health:
+      path: /health/**
+      url: https://site-management/site-management
+      subPaths:
+        - subPath: /user-health/me
+          authenticatedHttpMethods: GET
+    accounts:
+      path: /accounts/**
+      url: https://accounts-and-transactions/accounts-and-transactions/legacy-accounts
+      subPaths:
+        - subPath: /user-accounts/me
+          authenticatedHttpMethods: GET, POST, PATCH
+        - subPath: /user-accounts/me/accounts/hide-unhide
+          authenticatedHttpMethods: POST
+    transactions:
+      path: /transactions/**
+      url: https://accounts-and-transactions/accounts-and-transactions/legacy-transactions
+      subPaths:
+        - subPath: /transactions-by-account/me
+          authenticatedHttpMethods: GET
+    client-users:
+      path: /client-users/client-users/**
+      url: https://users/users/client-users
+      subPaths:
+        - subPath: ""
+          authenticatedHttpMethods: POST
+        - subPath: /me
+          authenticatedHttpMethods: DELETE
+    content:
+      path: /content/**
+      url: https://content/content
+      subPaths:
+        - subPath: /images/sites/logos/*
+          openHttpMethods: GET
+        - subPath: /images/sites/icons/*
+          openHttpMethods: GET
+
+service:
+  tokens:
+    encryption-shared-secret: Fdh9u8rINxfivbrianbbVT1u232VQBZYKx1HGAGPt2IFdh9u8rINxfivbrianbbVT1u232VQBZYKx1HGAGPt2I
+    url: https://tokens/tokens
+    # yamllint disable rule:line-length
+    signature-jwks: '{"keys":[{"kty":"RSA","e":"AQAB","use":"sig","kid":"2808f03d-1050-45f2-8c01-9c2441e050a8","alg":"RS512","n":"lRaJ738bbiMUpmTFLVXioZd7u9T9qm6LSH5FdW1AUrJJG-E4fo6n_30_ftUKc4ZZqotlJ-SvujHvqfNTbVkVy4m4j-yVgTQNP-OIsgTREVckcOk0v8bTaQALB3uCLA7xdDrr24K35tS5E6kDQQ8m9RvHiQk4owNLT81PevHkoH1lfgUwOZHfXLzJBqj_PXPoSIT1y9SfkCn7M00ea28n2xWbGXV_vj8bhJhKSXB2jnlHXO2QEXH6v8VoENl9CaWyjkJ0uJPPCyjRYO4-P2F92Xw88RC0rGGH-AA_sI9l8zOHu2MKFAL9txi2irUBq9bIayTWv0sjBbtHm_hopywVaw"}]}'
+    # yamllint enable rule:line-length
+  users:
+    url: https://users/users
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics, prometheus
+      base-path: /actuator
+  server:
+    port: 8444
+    ssl:
+      enabled: true
+      key-store: /vault/secrets/client_proxy-keystore.p12
+      key-alias: keystore
+      key-store-password: dontchangeit

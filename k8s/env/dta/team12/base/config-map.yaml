@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: client-gateway-kustomize
+data:
+  docker_registry: replaced-by-ci
+  environment_name: team12
+  service_tag: replaced-by-ci
+  config_server_tag: replaced-by-ci
+  docker_tag: replaced-by-ci
